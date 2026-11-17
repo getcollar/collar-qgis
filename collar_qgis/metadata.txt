@@ -1,0 +1,33 @@
+[general]
+name=Collar for QGIS
+qgisMinimumVersion=3.40
+qgisMaximumVersion=4.99
+version=0.4.1
+experimental=True
+deprecated=False
+author=Collar
+email=support@getcollar.io
+description=Connect live Collar projects, sync managed tracks both ways, and publish spatial features.
+about=Collar for QGIS connects the QGIS desktop workspace to Collar drilling and exploration projects.
+ Sign in with your Collar account in a normal browser (including organisation Microsoft sign-in when configured).
+ Load organised project layers, sync managed Tracks both ways where permitted, edit supported standalone mapping features with revision checks, propose hole moves for review, and publish vectors or GeoTIFF imagery into Collar.
+ Requirements and restrictions: an active Collar organisation account; internet access for sign-in and synchronisation; QGIS 3.40 or later on Windows, macOS or Linux.
+ No extra Python packages or pip installs are required.
+ Optional Esri imagery is a third-party online service and follows Esri terms.
+ This version is marked experimental.
+category=Vector
+homepage=https://getcollar.io/support/maps/collar-for-qgis
+tracker=https://github.com/getcollar/collar-qgis/issues
+repository=https://github.com/getcollar/collar-qgis
+icon=icon.png
+tags=collar,drilling,exploration,synchronisation,spatial,gis,tracks
+hasProcessingProvider=False
+server=False
+changelog=
+  0.4.1 - Rename standalone polygons to Work areas (work_area).
+  0.4.0 - Two-way managed Tracks sync for authorised editors; published tracks remain readable for viewers.
+  0.3.2 - Closer-zoom Esri imagery fallback that matches Collar's missing-tile behaviour.
+  0.3.1 - Hole-move review overlay and improved hole label outlines.
+  0.3.0 - Panel account display, settings window, separate operational layers and optional Esri basemap.
+  0.2.0 - Organised layer discovery and Collar styling.
+  0.1.0 - Initial experimental preview.
