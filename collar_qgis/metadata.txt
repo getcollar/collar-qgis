@@ -14,7 +14,7 @@ about=Collar for QGIS connects the QGIS desktop workspace to Collar drilling and
  Requirements and restrictions: an active Collar organisation account; internet access for sign-in and synchronisation; QGIS 3.40 or later on Windows, macOS or Linux.
  No extra Python packages or pip installs are required.
  Optional Esri imagery is a third-party online service and follows Esri terms.
- This version is marked experimental.
+ This version is in beta.
 category=Vector
 homepage=https://getcollar.io/support/maps/collar-for-qgis
 tracker=https://github.com/getcollar/collar-qgis/issues

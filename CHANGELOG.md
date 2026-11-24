@@ -5,6 +5,8 @@ All notable changes to Collar for QGIS are recorded here. Version numbers match
 
 ## 0.4.1
 
+- Product status is now **Beta**. The QGIS Plugin Manager `experimental=True`
+  flag remains enabled until a deliberate stable release.
 - Rename standalone polygons to **Work areas** (`work_area`).
 
 ## 0.4.0

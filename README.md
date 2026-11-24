@@ -8,7 +8,7 @@ reviewed spatial edits and publishing for exploration and drilling teams.
 | --- | --- |
 | **QGIS** | 3.40 – 4.x (Windows, macOS, Linux) |
 | **Licence** | [GPL-2.0-or-later](LICENSE) |
-| **Status** | Experimental preview (`0.4.1`) |
+| **Status** | Beta (`0.4.1`) |
 | **Homepage / usage** | https://getcollar.io/support/maps/collar-for-qgis |
 | **Product page** | https://getcollar.io/integrations/qgis |
 | **Issues** | https://github.com/getcollar/collar-qgis/issues |

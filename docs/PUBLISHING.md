@@ -14,7 +14,7 @@ https://plugins.qgis.org/docs/approval.
 - [x] PNG icon referenced by `icon=icon.png`
 - [x] `changelog` field populated
 - [x] Account requirement and “no pip deps” stated in `about`
-- [x] `experimental=True` until a stable release is deliberately chosen
+- [x] `experimental=True` (QGIS Plugin Manager flag) while product status remains beta; clear only for a deliberate stable release
 - [x] Package folder name `collar_qgis` (ASCII snake_case, PEP 8)
 
 ## Package and validate
@@ -59,7 +59,7 @@ Do not upload until these pass:
 - Bump `version` (must be unique per upload)
 - Refresh `changelog` in `metadata.txt` and `CHANGELOG.md`
 - Re-run `scripts/validate_package.py` so homepage / repository / tracker still resolve
-- Keep `experimental=True` until the team marks a stable release
+- Keep `experimental=True` (QGIS flag) until the team marks a stable release; product copy should say Beta, not Experimental
 
 ## Support copy
 
