@@ -1,13 +1,30 @@
 """Temporary canvas preview; only explicit Submit creates a relocation request."""
+
 import math
 import uuid
+
+from qgis.core import (
+    Qgis,
+    QgsCoordinateReferenceSystem,
+    QgsCoordinateTransform,
+    QgsDistanceArea,
+    QgsGeometry,
+    QgsPointXY,
+    QgsProject,
+)
+from qgis.gui import QgsMapToolEmitPoint, QgsRubberBand, QgsVertexMarker
 from qgis.PyQt.QtCore import Qt, pyqtSignal
 from qgis.PyQt.QtGui import QColor
-from qgis.PyQt.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
-    QPushButton, QPlainTextEdit, QProgressBar)
-from qgis.core import (Qgis, QgsProject, QgsPointXY, QgsGeometry, QgsDistanceArea,
-    QgsCoordinateTransform, QgsCoordinateReferenceSystem)
-from qgis.gui import QgsMapToolEmitPoint, QgsVertexMarker, QgsRubberBand
+from qgis.PyQt.QtWidgets import (
+    QDialog,
+    QHBoxLayout,
+    QLabel,
+    QPlainTextEdit,
+    QProgressBar,
+    QPushButton,
+    QVBoxLayout,
+)
+
 from .ui import style
 
 
@@ -60,13 +77,19 @@ class MoveReview(QDialog):
         self.hole_label.setTextFormat(Qt.TextFormat.PlainText)
         self.hole_label.setWordWrap(True)
         layout.addWidget(self.hole_label)
-        self.instruction = QLabel('Click a new position on the QGIS map. An orange cross and dashed line will show your proposal. Click again to adjust it.')
+        self.instruction = QLabel(
+            'Click a new position on the QGIS map. An orange cross and dashed line will show your proposal. Click again to adjust it.'
+        )
         self.instruction.setWordWrap(True)
         layout.addWidget(self.instruction)
         self.choose_button = QPushButton('Choose location on map')
         self.choose_button.clicked.connect(self.choose_location)
         layout.addWidget(self.choose_button)
-        self.coordinates = QLabel('Original: {:.6f}, {:.6f}\nProposed: choose a position on the map'.format(self.origin.y(), self.origin.x()))
+        self.coordinates = QLabel(
+            'Original: {:.6f}, {:.6f}\nProposed: choose a position on the map'.format(
+                self.origin.y(), self.origin.x()
+            )
+        )
         self.coordinates.setTextFormat(Qt.TextFormat.PlainText)
         self.coordinates.setWordWrap(True)
         layout.addWidget(self.coordinates)
@@ -76,7 +99,9 @@ class MoveReview(QDialog):
         self.reason.setMaximumHeight(100)
         self.reason.textChanged.connect(self.update_submit)
         layout.addWidget(self.reason)
-        hint = QLabel('The original hole remains unchanged. Submit sends a proposal to Collar for another authorised planner to approve.')
+        hint = QLabel(
+            'The original hole remains unchanged. Submit sends a proposal to Collar for another authorised planner to approve.'
+        )
         hint.setWordWrap(True)
         layout.addWidget(hint)
         self.feedback = QLabel('Choose a location and enter a reason before submitting.')
@@ -106,15 +131,24 @@ class MoveReview(QDialog):
     def choose_location(self):
         if not self.busy:
             self.canvas.setMapTool(self.tool)
-            self.feedback.setText('Click the map to choose or adjust the proposed position. Nothing is sent until you select Submit proposal.')
+            self.feedback.setText(
+                'Click the map to choose or adjust the proposed position. Nothing is sent until you select Submit proposal.'
+            )
 
     def pick(self, point, button):
         if self.busy or button != Qt.MouseButton.LeftButton:
             return
         try:
-            transform = QgsCoordinateTransform(self.canvas.mapSettings().destinationCrs(), self.wgs84, QgsProject.instance())
+            transform = QgsCoordinateTransform(
+                self.canvas.mapSettings().destinationCrs(), self.wgs84, QgsProject.instance()
+            )
             target = transform.transform(QgsPointXY(point))
-            if not (math.isfinite(target.x()) and math.isfinite(target.y()) and -180 <= target.x() <= 180 and -90 < target.y() < 90):
+            if not (
+                math.isfinite(target.x())
+                and math.isfinite(target.y())
+                and -180 <= target.x() <= 180
+                and -90 < target.y() < 90
+            ):
                 raise ValueError('Choose a valid location on the map.')
             measure = QgsDistanceArea()
             measure.setSourceCrs(self.wgs84, QgsProject.instance().transformContext())
@@ -124,22 +158,34 @@ class MoveReview(QDialog):
                 raise ValueError('Choose a position different from the original hole.')
             self.target = target
             self.draw_preview()
-            self.coordinates.setText('Original: {:.6f}, {:.6f}\nProposed: {:.6f}, {:.6f}\nDistance: {:,.1f} m'.format(self.origin.y(), self.origin.x(), target.y(), target.x(), distance))
-            self.feedback.setText('Review the orange marker and dashed line. Click the map again to adjust the location, or enter a reason and submit.')
+            self.coordinates.setText(
+                'Original: {:.6f}, {:.6f}\nProposed: {:.6f}, {:.6f}\nDistance: {:,.1f} m'.format(
+                    self.origin.y(), self.origin.x(), target.y(), target.x(), distance
+                )
+            )
+            self.feedback.setText(
+                'Review the orange marker and dashed line. Click the map again to adjust the location, or enter a reason and submit.'
+            )
         except Exception:
             # An invalid click must not leave a previous valid target submittable.
             self.target = None
             self.proposed_marker.hide()
             self.line.hide()
-            self.coordinates.setText('Proposed: choose a valid position different from the original hole.')
-            self.feedback.setText('That position cannot be used. Choose another location on the map.')
+            self.coordinates.setText(
+                'Proposed: choose a valid position different from the original hole.'
+            )
+            self.feedback.setText(
+                'That position cannot be used. Choose another location on the map.'
+            )
         self.update_submit()
 
     def draw_preview(self):
         if self.cleaned:
             return
         try:
-            transform = QgsCoordinateTransform(self.wgs84, self.canvas.mapSettings().destinationCrs(), QgsProject.instance())
+            transform = QgsCoordinateTransform(
+                self.wgs84, self.canvas.mapSettings().destinationCrs(), QgsProject.instance()
+            )
             original = transform.transform(self.origin)
             self.original_marker.setCenter(original)
             if self.target is not None:
@@ -149,14 +195,20 @@ class MoveReview(QDialog):
                 self.line.setToGeometry(QgsGeometry.fromPolylineXY([original, proposed]), None)
                 self.line.show()
         except Exception:
-            self.feedback.setText('The preview cannot be displayed in this map projection. Cancel and choose a suitable project CRS.')
+            self.feedback.setText(
+                'The preview cannot be displayed in this map projection. Cancel and choose a suitable project CRS.'
+            )
             self.target = None
             self.proposed_marker.hide()
             self.line.hide()
             self.update_submit()
 
     def update_submit(self):
-        self.submit_button.setEnabled(not self.busy and self.target is not None and 0 < len(self.reason.toPlainText().strip()) <= 2000)
+        self.submit_button.setEnabled(
+            not self.busy
+            and self.target is not None
+            and 0 < len(self.reason.toPlainText().strip()) <= 2000
+        )
 
     def set_busy(self, busy):
         self.busy = busy
@@ -175,8 +227,15 @@ class MoveReview(QDialog):
         if self.last_content is not None and content != self.last_content:
             self.client_id = str(uuid.uuid4())
         self.last_content = content
-        self.submitted.emit({'clientId':self.client_id, 'revision':self.revision,
-                             'lng':content[0], 'lat':content[1], 'comment':content[2]})
+        self.submitted.emit(
+            {
+                'clientId': self.client_id,
+                'revision': self.revision,
+                'lng': content[0],
+                'lat': content[1],
+                'comment': content[2],
+            }
+        )
 
     def reject(self):
         if not self.busy:

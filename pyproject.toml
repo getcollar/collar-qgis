@@ -1,0 +1,15 @@
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+extend-exclude = ["dist"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/qgis_smoke.py" = ["E402"]
+
+[tool.ruff.format]
+quote-style = "single"
+

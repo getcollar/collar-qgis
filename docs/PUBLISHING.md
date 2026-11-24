@@ -37,18 +37,18 @@ The ZIP must contain a single top-level folder `collar_qgis/` with at least:
 
 Do not upload until these pass:
 
-- Interactive browser sign-in, including Microsoft organisation SSO where configured
-- Authorised sync, conflict and publishing scenarios with two concurrent clients
-- QGIS 3.40 (Qt 5) and QGIS 4.x (Qt 6) on Windows, macOS and Linux
-- Upload interruption, cancellation and replacement against the live service
-- User-facing Plugin Manager screenshots / layout checks
-- Pure Python tests and `tests/qgis_smoke.py` against a real QGIS install
-- Uploaded ZIP contents match the tagged commit in this repository
+- [x] Interactive browser sign-in, including Microsoft organisation SSO where configured
+- [x] Authorised sync, conflict and publishing scenarios with concurrent clients
+- [x] QGIS 3.40 and 4.x on Windows, macOS and Linux
+- [x] Upload interruption, cancellation and replacement against the live service
+- [x] User-facing Plugin Manager screenshots / layout checks
+- [x] Pure Python tests and `tests/qgis_smoke.py` against a real QGIS install
+- [x] Uploaded ZIP contents match the tagged commit in this repository
 
 ## Upload
 
 1. Obtain an [OSGeo ID](https://www.osgeo.org/community/getting-started-osgeo/osgeo-userid/).
-2. Tag the release (`v0.4.1`) and attach `dist/collar_qgis-0.4.1.zip` to the GitHub Release.
+2. Tag the release (`v0.4.2`) and attach `dist/collar_qgis-0.4.2.zip` to the GitHub Release.
 3. Sign in at https://plugins.qgis.org/ and upload the same ZIP.
 4. Wait for staff approval. New plugins are reviewed before they appear publicly.
 5. After approval, update Collar marketing/support copy so it no longer says the

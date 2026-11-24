@@ -1,13 +1,30 @@
 """Collar's scoped native interface and local, non-sensitive preferences."""
-from pathlib import Path
-from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, QCheckBox,
-    QComboBox, QDialogButtonBox, QWidget)
 
-INTERVALS = [(30, '30 seconds'), (60, '1 minute'), (120, '2 minutes'),
-             (300, '5 minutes'), (600, '10 minutes'), (900, '15 minutes'),
-             (1800, '30 minutes'), (3600, '1 hour')]
+from pathlib import Path
+
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QHBoxLayout,
+    QLabel,
+    QVBoxLayout,
+    QWidget,
+)
+
+INTERVALS = [
+    (30, '30 seconds'),
+    (60, '1 minute'),
+    (120, '2 minutes'),
+    (300, '5 minutes'),
+    (600, '10 minutes'),
+    (900, '15 minutes'),
+    (1800, '30 minutes'),
+    (3600, '1 hour'),
+]
+
 
 def preferences(store):
     enabled = str(store.value('collar/autoRefreshEnabled', 'true')).lower() in ('true', '1')
@@ -16,10 +33,15 @@ def preferences(store):
         seconds = int(store.value('collar/refreshSeconds', 120))
     except (ValueError, TypeError):
         seconds = 120
-    return {'enabled': enabled, 'seconds': seconds if seconds in dict(INTERVALS) else 120, 'basemap': basemap}
+    return {
+        'enabled': enabled,
+        'seconds': seconds if seconds in dict(INTERVALS) else 120,
+        'basemap': basemap,
+    }
+
 
 def style():
-    return '''
+    return """
     QWidget#CollarPanel, QDialog#CollarSettings { background: palette(window); }
     QWidget#CollarHeader { background: #173f35; border-radius: 10px; }
     QWidget#CollarHeader QLabel { color: #f8f7f3; background: transparent; }
@@ -37,7 +59,8 @@ def style():
     QListWidget::item { padding: 6px 2px; }
     QProgressBar { max-height: 5px; border: 0; background: palette(midlight); }
     QProgressBar::chunk { background: #8aa37e; }
-    '''
+    """
+
 
 def brand_header(parent=None):
     header = QWidget(parent)
@@ -50,6 +73,7 @@ def brand_header(parent=None):
     layout.addWidget(logo)
     layout.addWidget(QLabel('Connected planning · QGIS'))
     return header
+
 
 class SettingsDialog(QDialog):
     def __init__(self, parent):
@@ -75,16 +99,22 @@ class SettingsDialog(QDialog):
         row.addWidget(self.interval, 1)
         layout.addLayout(row)
         self.enabled.toggled.connect(self.interval.setEnabled)
-        hint = QLabel('Keep project layers up to date. Layers with local edits are skipped. Changes you make in QGIS are only sent when you choose Sync changes to Collar.')
+        hint = QLabel(
+            'Keep project layers up to date. Layers with local edits are skipped. Changes you make in QGIS are only sent when you choose Sync changes to Collar.'
+        )
         hint.setWordWrap(True)
         layout.addWidget(hint)
         self.basemap = QCheckBox('Include Esri imagery when loading a project')
         layout.addWidget(self.basemap)
-        hint = QLabel('Adds a basemap if no raster is present. Imagery is requested directly from Esri. You can use your own basemap instead.')
+        hint = QLabel(
+            'Adds a basemap if no raster is present. Imagery is requested directly from Esri. You can use your own basemap instead.'
+        )
         hint.setWordWrap(True)
         layout.addWidget(hint)
         layout.addStretch()
-        self.buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
+        self.buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
+        )
         self.buttons.button(QDialogButtonBox.StandardButton.Save).setProperty('primary', True)
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
@@ -97,4 +127,8 @@ class SettingsDialog(QDialog):
         self.basemap.setChecked(values['basemap'])
 
     def values(self):
-        return {'enabled':self.enabled.isChecked(), 'seconds':self.interval.currentData(), 'basemap':self.basemap.isChecked()}
+        return {
+            'enabled': self.enabled.isChecked(),
+            'seconds': self.interval.currentData(),
+            'basemap': self.basemap.isChecked(),
+        }

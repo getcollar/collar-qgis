@@ -1,22 +1,56 @@
 """Persistent local working copies; snapshots and connection IDs never contain tokens."""
-import json
+
 import hashlib
+import json
 import os
 import uuid
 from pathlib import Path
+
+from qgis.core import (
+    Qgis,
+    QgsApplication,
+    QgsCategorizedSymbolRenderer,
+    QgsCoordinateReferenceSystem,
+    QgsCoordinateTransform,
+    QgsDefaultValue,
+    QgsFeature,
+    QgsField,
+    QgsFillSymbol,
+    QgsGeometry,
+    QgsJsonUtils,
+    QgsLineSymbol,
+    QgsMarkerSymbol,
+    QgsPalLayerSettings,
+    QgsProject,
+    QgsRendererCategory,
+    QgsSingleSymbolRenderer,
+    QgsTextBufferSettings,
+    QgsTextFormat,
+    QgsVectorFileWriter,
+    QgsVectorLayer,
+    QgsVectorLayerSimpleLabeling,
+)
 from qgis.PyQt.QtCore import Qt, QVariant
 from qgis.PyQt.QtGui import QColor, QFont
-from qgis.core import (QgsApplication, QgsProject, QgsVectorLayer, QgsFeature, QgsField,
-                       QgsGeometry, QgsVectorFileWriter, QgsCoordinateReferenceSystem,
-                       QgsCoordinateTransform, QgsSymbol, QgsRendererCategory,
-                       QgsCategorizedSymbolRenderer, QgsPalLayerSettings, QgsVectorLayerSimpleLabeling, QgsDefaultValue, QgsJsonUtils, QgsFillSymbol, QgsLineSymbol, QgsMarkerSymbol, QgsSingleSymbolRenderer, QgsTextFormat, QgsTextBufferSettings, Qgis)
-from .sync import changes_between, acknowledge
 
-FIELDS = [('client_key', QVariant.String), ('id', QVariant.String), ('revision', QVariant.Int),
-          ('kind', QVariant.String), ('name', QVariant.String), ('notes', QVariant.String),
-          ('type', QVariant.String), ('stage', QVariant.String), ('status', QVariant.String),
-          ('widthM', QVariant.Double),
-          ('editable', QVariant.Bool), ('state', QVariant.String), ('qgis_revision', QVariant.String), ('details', QVariant.String)]
+from .sync import acknowledge, changes_between
+
+FIELDS = [
+    ('client_key', QVariant.String),
+    ('id', QVariant.String),
+    ('revision', QVariant.Int),
+    ('kind', QVariant.String),
+    ('name', QVariant.String),
+    ('notes', QVariant.String),
+    ('type', QVariant.String),
+    ('stage', QVariant.String),
+    ('status', QVariant.String),
+    ('widthM', QVariant.Double),
+    ('editable', QVariant.Bool),
+    ('state', QVariant.String),
+    ('qgis_revision', QVariant.String),
+    ('details', QVariant.String),
+]
 
 TRACK_TYPE_STYLES = {
     'access_track': {'color': '#43946e', 'width': 3},
@@ -37,8 +71,14 @@ TRACK_TYPE_LABELS = {
 def snapshot(layer):
     result = {}
     for feature in layer.getFeatures():
-        if not feature['client_key'] or str(feature['client_key']) == 'NULL' or feature['client_key'] in result:
-            raise ValueError('Every local feature needs a unique client_key. Use the QGIS feature form defaults.')
+        if (
+            not feature['client_key']
+            or str(feature['client_key']) == 'NULL'
+            or feature['client_key'] in result
+        ):
+            raise ValueError(
+                'Every local feature needs a unique client_key. Use the QGIS feature form defaults.'
+            )
         row = {name: feature[name] for name, _ in FIELDS}
         for name in row:
             if row[name] is None or str(row[name]) == 'NULL':
@@ -60,11 +100,14 @@ def pending(layer):
 
 
 def connected_layers(organisation=None, project=None):
-    return [layer for layer in QgsProject.instance().mapLayers().values()
-            if layer.customProperty('collar/managed', False)
-            and not layer.customProperty('collar/legacy_archived', False)
-            and (organisation is None or layer.customProperty('collar/organisation') == organisation)
-            and (project is None or layer.customProperty('collar/project') == project)]
+    return [
+        layer
+        for layer in QgsProject.instance().mapLayers().values()
+        if layer.customProperty('collar/managed', False)
+        and not layer.customProperty('collar/legacy_archived', False)
+        and (organisation is None or layer.customProperty('collar/organisation') == organisation)
+        and (project is None or layer.customProperty('collar/project') == project)
+    ]
 
 
 def dirty(layer):
@@ -103,10 +146,16 @@ def add_features(layer, features, kind, editing=False):
         for (name, _), value in zip(FIELDS, values):
             feature.setAttribute(name, value)
         for key, value in p.items():
-            if key not in {name for name, _ in FIELDS} and layer.fields().indexFromName(key) >= 0 and isinstance(value, (str, int, float, bool)):
+            if (
+                key not in {name for name, _ in FIELDS}
+                and layer.fields().indexFromName(key) >= 0
+                and isinstance(value, (str, int, float, bool))
+            ):
                 feature.setAttribute(key, value)
         additions.append(feature)
-    outcome = layer.addFeatures(additions) if editing else layer.dataProvider().addFeatures(additions)
+    outcome = (
+        layer.addFeatures(additions) if editing else layer.dataProvider().addFeatures(additions)
+    )
     ok = outcome[0] if isinstance(outcome, tuple) else outcome
     if not ok:
         raise ValueError('Could not save the local working layer')
@@ -114,37 +163,68 @@ def add_features(layer, features, kind, editing=False):
 
 
 DEFAULT_MAP_STYLE = {
-    'holeColors': {'planned':'#9aa896','preparation':'#d4a012','ready':'#2e7d5b','drilling':'#4f7ba2',
-                   'drilled':'#6b7f62','rehab_required':'#d9c8a9','complete':'#3e5b49'},
-    'holeLabel': {'color':'#000000','haloColor':'#ffffff','size':14},
-    'layers': {'disturbance':'#d4a012','disturbanceOutline':'#f5c84c','proposedPad':'#5b7fb0','proposedSump':'#c17a28'},
-    'fillOpacity': {'disturbance':0.24,'proposedPad':0.18,'proposedSump':0.4},
+    'holeColors': {
+        'planned': '#9aa896',
+        'preparation': '#d4a012',
+        'ready': '#2e7d5b',
+        'drilling': '#4f7ba2',
+        'drilled': '#6b7f62',
+        'rehab_required': '#d9c8a9',
+        'complete': '#3e5b49',
+    },
+    'holeLabel': {'color': '#000000', 'haloColor': '#ffffff', 'size': 14},
+    'layers': {
+        'disturbance': '#d4a012',
+        'disturbanceOutline': '#f5c84c',
+        'proposedPad': '#5b7fb0',
+        'proposedSump': '#c17a28',
+    },
+    'fillOpacity': {'disturbance': 0.24, 'proposedPad': 0.18, 'proposedSump': 0.4},
 }
 DEFAULT_FEATURE_STYLES = {
     'managed_tracks': {'color': '#43946e'},
-    'clearing':{'color':'#d4a012'}, 'work_area':{'color':'#8d6e4a'},
-    'rehab_area':{'color':'#4f9a6a'}, 'boundary':{'color':'#5b7fb0','dashed':True},
-    'annotation':{'color':'#a35fb0'}, 'marker':{'color':'#d0453b'}, 'other':{'color':'#6b7280'},
+    'clearing': {'color': '#d4a012'},
+    'work_area': {'color': '#8d6e4a'},
+    'rehab_area': {'color': '#4f9a6a'},
+    'boundary': {'color': '#5b7fb0', 'dashed': True},
+    'annotation': {'color': '#a35fb0'},
+    'marker': {'color': '#d0453b'},
+    'other': {'color': '#6b7280'},
 }
 
 
 def default_style(layer, config=None):
     config = config or stored(layer, 'style', {})
-    style = {key:{**value, **config.get('mapStyle', {}).get(key, {})} for key,value in DEFAULT_MAP_STYLE.items()}
+    style = {
+        key: {**value, **config.get('mapStyle', {}).get(key, {})}
+        for key, value in DEFAULT_MAP_STYLE.items()
+    }
     feature_styles = {**DEFAULT_FEATURE_STYLES, **config.get('featureStyles', {})}
     category = layer.customProperty('collar/category')
     if layer.geometryType() == 0 and category in ['holes', 'operational']:
         categories = []
         for key, colour in style['holeColors'].items():
-            symbol = QgsMarkerSymbol.createSimple({'name':'circle','color':colour,'outline_color':'#ffffff','outline_width':'1','outline_width_unit':'Pixel','size':'9','size_unit':'Pixel'})
+            symbol = QgsMarkerSymbol.createSimple(
+                {
+                    'name': 'circle',
+                    'color': colour,
+                    'outline_color': '#ffffff',
+                    'outline_width': '1',
+                    'outline_width_unit': 'Pixel',
+                    'size': '9',
+                    'size_unit': 'Pixel',
+                }
+            )
             categories.append(QgsRendererCategory(key, symbol, key.replace('_', ' ').title()))
-        fallback = QgsMarkerSymbol.createSimple({'color':style['holeColors']['planned'],'size':'9','size_unit':'Pixel'})
+        fallback = QgsMarkerSymbol.createSimple(
+            {'color': style['holeColors']['planned'], 'size': '9', 'size_unit': 'Pixel'}
+        )
         categories.append(QgsRendererCategory(None, fallback, 'Other'))
         layer.setRenderer(QgsCategorizedSymbolRenderer('state', categories))
         labels = QgsPalLayerSettings()
         labels.fieldName = 'name'
         text = QgsTextFormat()
-        text.setFont(QFont("Open Sans"))
+        text.setFont(QFont('Open Sans'))
         text.setSize(style['holeLabel']['size'])
         text.setSizeUnit(Qgis.RenderUnit.Pixels)
         text.setColor(QColor(style['holeLabel']['color']))
@@ -168,7 +248,9 @@ def default_style(layer, config=None):
         for key, meta in track_styles.items():
             props = {
                 'line_color': meta.get('color', '#43946e'),
-                'line_style': 'dash' if meta.get('dashed') or key == 'walking_track' or key == 'proposed' else 'solid',
+                'line_style': 'dash'
+                if meta.get('dashed') or key == 'walking_track' or key == 'proposed'
+                else 'solid',
                 'line_width': str(meta.get('width', 3)),
                 'line_width_unit': 'Pixel',
             }
@@ -183,7 +265,12 @@ def default_style(layer, config=None):
             )
         # Proposed tracks: keep type colour but always dash via a second rule on stage when possible.
         fallback = QgsLineSymbol.createSimple(
-            {'line_color': '#43946e', 'line_style': 'solid', 'line_width': '3', 'line_width_unit': 'Pixel'}
+            {
+                'line_color': '#43946e',
+                'line_style': 'solid',
+                'line_width': '3',
+                'line_width_unit': 'Pixel',
+            }
         )
         categories.append(QgsRendererCategory(None, fallback, 'Other'))
         layer.setRenderer(QgsCategorizedSymbolRenderer('type', categories))
@@ -207,8 +294,12 @@ def default_style(layer, config=None):
         layer.setLabeling(QgsVectorLayerSimpleLabeling(labels))
         layer.setLabelsEnabled(True)
     else:
-        key = {'proposed_pad':'proposedPad', 'proposed_sump':'proposedSump', 'disturbance':'disturbance'}.get(category)
-        feature = feature_styles.get(category, {'color':'#6b7280'})
+        key = {
+            'proposed_pad': 'proposedPad',
+            'proposed_sump': 'proposedSump',
+            'disturbance': 'disturbance',
+        }.get(category)
+        feature = feature_styles.get(category, {'color': '#6b7280'})
         colour = style['layers'][key] if key else feature['color']
         opacity = style['fillOpacity'][key] if key else 0.2
         outline = style['layers']['disturbanceOutline'] if category == 'disturbance' else colour
@@ -217,18 +308,45 @@ def default_style(layer, config=None):
             fill = QColor(colour)
             fill.setAlphaF(opacity)
             rgba = ','.join(str(value) for value in fill.getRgb())
-            symbol = QgsFillSymbol.createSimple({'color':rgba,'outline_color':outline,'outline_style':'dash' if dashed else 'solid','outline_width':'1.5','outline_width_unit':'Pixel'})
+            symbol = QgsFillSymbol.createSimple(
+                {
+                    'color': rgba,
+                    'outline_color': outline,
+                    'outline_style': 'dash' if dashed else 'solid',
+                    'outline_width': '1.5',
+                    'outline_width_unit': 'Pixel',
+                }
+            )
         elif layer.geometryType() == 1:
-            symbol = QgsLineSymbol.createSimple({'line_color':colour,'line_style':'dash' if dashed else 'solid','line_width':'2.5','line_width_unit':'Pixel'})
+            symbol = QgsLineSymbol.createSimple(
+                {
+                    'line_color': colour,
+                    'line_style': 'dash' if dashed else 'solid',
+                    'line_width': '2.5',
+                    'line_width_unit': 'Pixel',
+                }
+            )
         else:
-            symbol = QgsMarkerSymbol.createSimple({'color':colour,'outline_color':'#ffffff','size':'7','size_unit':'Pixel'})
+            symbol = QgsMarkerSymbol.createSimple(
+                {'color': colour, 'outline_color': '#ffffff', 'size': '7', 'size_unit': 'Pixel'}
+            )
         layer.setRenderer(QgsSingleSymbolRenderer(symbol))
         layer.setLabelsEnabled(False)
     layer.setCustomProperty('collar/style', json.dumps(config))
     layer.triggerRepaint()
 
 
-def create_layer(name, geometry_type, features, organisation, project, category, editable, project_name=None, style=None):
+def create_layer(
+    name,
+    geometry_type,
+    features,
+    organisation,
+    project,
+    category,
+    editable,
+    project_name=None,
+    style=None,
+):
     layer = QgsVectorLayer(geometry_type + '?crs=EPSG:4326', name, 'memory')
     layer.dataProvider().addAttributes([QgsField(n, t) for n, t in FIELDS])
     layer.updateFields()
@@ -236,39 +354,66 @@ def create_layer(name, geometry_type, features, organisation, project, category,
     reserved = {n for n, _ in FIELDS} | {'fid'}
     for item in features:
         for key, value in item.get('properties', {}).items():
-            if key not in reserved and len(key) <= 60 and key.isidentifier() and len(extras) < 100 and isinstance(value, (str, int, float, bool)):
-                extras[key] = QVariant.Bool if isinstance(value, bool) else QVariant.Double if isinstance(value, (int, float)) else QVariant.String
+            if (
+                key not in reserved
+                and len(key) <= 60
+                and key.isidentifier()
+                and len(extras) < 100
+                and isinstance(value, (str, int, float, bool))
+            ):
+                extras[key] = (
+                    QVariant.Bool
+                    if isinstance(value, bool)
+                    else QVariant.Double
+                    if isinstance(value, (int, float))
+                    else QVariant.String
+                )
     layer.dataProvider().addAttributes([QgsField(n, t) for n, t in extras.items()])
     layer.updateFields()
     add_features(layer, features, category)
     root = Path(QgsApplication.qgisSettingsDirPath()) / 'collar'
     root.mkdir(parents=True, exist_ok=True, mode=0o700)
-    directory = root / hashlib.sha256(organisation.encode()).hexdigest() / hashlib.sha256(project.encode()).hexdigest()
+    directory = (
+        root
+        / hashlib.sha256(organisation.encode()).hexdigest()
+        / hashlib.sha256(project.encode()).hexdigest()
+    )
     directory.mkdir(parents=True, exist_ok=True, mode=0o700)
     path = directory / (str(uuid.uuid4()) + '.gpkg')
     options = QgsVectorFileWriter.SaveVectorOptions()
     options.driverName = 'GPKG'
     options.layerName = 'features'
-    result = QgsVectorFileWriter.writeAsVectorFormatV3(layer, str(path), QgsProject.instance().transformContext(), options)
+    result = QgsVectorFileWriter.writeAsVectorFormatV3(
+        layer, str(path), QgsProject.instance().transformContext(), options
+    )
     if result[0] != QgsVectorFileWriter.NoError:
         raise ValueError('Could not create a persistent QGIS working copy')
     os.chmod(path, 0o600)
     layer = QgsVectorLayer(str(path) + '|layername=features', name, 'ogr')
     if not layer.isValid():
         raise ValueError('Could not open the local working copy')
-    for key, value in [('managed', True), ('organisation', organisation), ('project', project),
-                       ('category', category), ('geometry', geometry_type)]:
+    for key, value in [
+        ('managed', True),
+        ('organisation', organisation),
+        ('project', project),
+        ('category', category),
+        ('geometry', geometry_type),
+    ]:
         layer.setCustomProperty('collar/' + key, value)
     layer.setCustomProperty('collar/baseline', json.dumps(snapshot(layer)))
     defaults = [('client_key', 'uuid()'), ('kind', "'" + category + "'"), ('editable', 'true')]
     if category == 'managed_tracks':
-        defaults.extend([
-            ('type', "'access_track'"),
-            ('stage', "'actual'"),
-            ('status', "'published'"),
-        ])
+        defaults.extend(
+            [
+                ('type', "'access_track'"),
+                ('stage', "'actual'"),
+                ('status', "'published'"),
+            ]
+        )
     for field, expression in defaults:
-        layer.setDefaultValueDefinition(layer.fields().indexFromName(field), QgsDefaultValue(expression))
+        layer.setDefaultValueDefinition(
+            layer.fields().indexFromName(field), QgsDefaultValue(expression)
+        )
     form = layer.editFormConfig()
     editable_fields = {'name', 'notes'}
     if category == 'managed_tracks':
@@ -282,18 +427,48 @@ def create_layer(name, geometry_type, features, organisation, project, category,
     default_style(layer, style)
     root = QgsProject.instance().layerTreeRoot()
     group_name = 'Collar · ' + (project_name or project)
-    group = next((item for item in root.children() if hasattr(item, 'customProperty') and item.customProperty('collar/project') == project and item.customProperty('collar/organisation') == organisation), None)
+    group = next(
+        (
+            item
+            for item in root.children()
+            if hasattr(item, 'customProperty')
+            and item.customProperty('collar/project') == project
+            and item.customProperty('collar/organisation') == organisation
+        ),
+        None,
+    )
     if group is None:
         group = root.insertGroup(0, group_name)
         group.setCustomProperty('collar/project', project)
         group.setCustomProperty('collar/organisation', organisation)
     QgsProject.instance().addMapLayer(layer, False)
-    rank = {'holes':0,'proposed_sump':1,'proposed_pad':2,'disturbance':3}
-    position = next((index for index,node in enumerate(group.children()) if hasattr(node,'layer') and node.layer() and rank.get(node.layer().customProperty('collar/category'),4) > rank.get(category,4)), len(group.children()))
+    rank = {'holes': 0, 'proposed_sump': 1, 'proposed_pad': 2, 'disturbance': 3}
+    position = next(
+        (
+            index
+            for index, node in enumerate(group.children())
+            if hasattr(node, 'layer')
+            and node.layer()
+            and rank.get(node.layer().customProperty('collar/category'), 4) > rank.get(category, 4)
+        ),
+        len(group.children()),
+    )
     group.insertLayer(position, layer)
     if root.hasCustomLayerOrder():
         order = [item for item in root.customLayerOrder() if item.id() != layer.id()]
-        first_basemap = next((i for i,item in enumerate(order) if item.customProperty('collar/basemap') or (item.customProperty('collar/organisation') == organisation and item.customProperty('collar/project') == project and rank.get(item.customProperty('collar/category'),4) > rank.get(category,4))),len(order))
+        first_basemap = next(
+            (
+                i
+                for i, item in enumerate(order)
+                if item.customProperty('collar/basemap')
+                or (
+                    item.customProperty('collar/organisation') == organisation
+                    and item.customProperty('collar/project') == project
+                    and rank.get(item.customProperty('collar/category'), 4) > rank.get(category, 4)
+                )
+            ),
+            len(order),
+        )
         order.insert(first_basemap, layer)
         root.setCustomLayerOrder(order)
     return layer
@@ -326,13 +501,18 @@ def apply_results(layer, submitted, results):
     baseline = acknowledge(stored(layer, 'baseline', {}), submitted, results)
     # Preserve local edits made after the submitted snapshot while assigning server IDs.
     changes = {}
-    id_index, revision_index = layer.fields().indexFromName('id'), layer.fields().indexFromName('revision')
+    id_index, revision_index = (
+        layer.fields().indexFromName('id'),
+        layer.fields().indexFromName('revision'),
+    )
     for feature in layer.getFeatures():
         row = baseline.get(feature['client_key'])
         if row:
             changes[feature.id()] = {id_index: row['id'], revision_index: row['revision']}
     if changes and not layer.dataProvider().changeAttributeValues(changes):
-        raise ValueError('Server changes saved; local IDs could not be updated. Retry sync to recover.')
+        raise ValueError(
+            'Server changes saved; local IDs could not be updated. Retry sync to recover.'
+        )
     layer.setCustomProperty('collar/baseline', json.dumps(baseline))
     layer.triggerRepaint()
 
@@ -342,7 +522,9 @@ def export_vector(source, category):
         raise ValueError('Select a vector layer with a valid CRS')
     if source.featureCount() > 5000:
         raise ValueError('Publish up to 5,000 features at a time')
-    transform = QgsCoordinateTransform(source.crs(), QgsCoordinateReferenceSystem('EPSG:4326'), QgsProject.instance())
+    transform = QgsCoordinateTransform(
+        source.crs(), QgsCoordinateReferenceSystem('EPSG:4326'), QgsProject.instance()
+    )
     features = []
     track = category == 'managed_tracks'
     for feature in source.getFeatures():
@@ -351,11 +533,16 @@ def export_vector(source, category):
             raise ValueError('Fix empty or invalid geometries before publishing')
         geometry.transform(transform)
         value = json.loads(geometry.asJson(15))
-        allowed = ['LineString', 'MultiLineString'] if track else ['Point', 'LineString', 'Polygon', 'MultiPolygon']
+        allowed = (
+            ['LineString', 'MultiLineString']
+            if track
+            else ['Point', 'LineString', 'Polygon', 'MultiPolygon']
+        )
         if value['type'] not in allowed:
             raise ValueError(
-                'Tracks require line geometry' if track else
-                'Convert multipart points or geometry collections to supported geometry first'
+                'Tracks require line geometry'
+                if track
+                else 'Convert multipart points or geometry collections to supported geometry first'
             )
         properties = {'kind': category, 'editable': True}
         for name in ['name', 'notes', 'type', 'stage', 'status', 'widthM']:
@@ -377,7 +564,14 @@ def export_vector(source, category):
             properties.setdefault('status', 'published')
             if not properties.get('name'):
                 raise ValueError('Give every track a name before publishing')
-        features.append({'type':'Feature', 'id':str(uuid.uuid4()), 'geometry':value, 'properties':properties})
+        features.append(
+            {
+                'type': 'Feature',
+                'id': str(uuid.uuid4()),
+                'geometry': value,
+                'properties': properties,
+            }
+        )
     if not features:
         raise ValueError('The selected layer is empty')
     return features
@@ -385,13 +579,24 @@ def export_vector(source, category):
 
 def archive_combined_layer(layer):
     """Keep original data and user styling, but stop treating the old view as live."""
-    if layer.customProperty('collar/category') != 'operational' or not layer.readOnly() or dirty(layer):
+    if (
+        layer.customProperty('collar/category') != 'operational'
+        or not layer.readOnly()
+        or dirty(layer)
+    ):
         return False
     node = QgsProject.instance().layerTreeRoot().findLayer(layer.id())
     if node is None:
         return False
     parent = node.parent()
-    archive = next((child for child in parent.children() if hasattr(child, 'addChildNode') and child.name() == 'Previous combined layers'), None)
+    archive = next(
+        (
+            child
+            for child in parent.children()
+            if hasattr(child, 'addChildNode') and child.name() == 'Previous combined layers'
+        ),
+        None,
+    )
     if archive is None:
         archive = parent.addGroup('Previous combined layers')
     copy = node.clone()

@@ -1,9 +1,12 @@
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from collar_qgis.uploads import FilePart
 import tempfile
 import unittest
+
+from collar_qgis.uploads import FilePart
+
 
 class FilePartTests(unittest.TestCase):
     def test_reads_only_the_requested_range_and_rejects_changed_sources(self):

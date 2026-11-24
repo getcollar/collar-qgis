@@ -3,16 +3,18 @@
 Only fixed Esri URLs are fetched. The loopback listener is owned by the enabled
 plugin, accepts validated tile coordinates only and never proxies arbitrary URLs.
 """
+
 import re
 import threading
 import time
-import urllib.request
-import urllib.error
 from collections import OrderedDict
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
-from qgis.PyQt.QtCore import QByteArray, QBuffer, QIODevice, QRectF
+
+from qgis.core import QgsBlockingNetworkRequest
+from qgis.PyQt.QtCore import QBuffer, QByteArray, QIODevice, QRectF, QUrl
 from qgis.PyQt.QtGui import QImage, QImageReader, QPainter
+from qgis.PyQt.QtNetwork import QNetworkRequest
 
 TILES = 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}?blankTile=false'
 MAX_ZOOM = 19
@@ -20,30 +22,41 @@ MAX_IMAGE = 2 * 1024 * 1024
 MAX_CACHE = 32 * 1024 * 1024
 ROUTE = re.compile(r'/esri/(0|[1-9][0-9]?)/(0|[1-9][0-9]{0,6})/(0|[1-9][0-9]{0,6})\.png\Z')
 
+
 class MissingTile(Exception):
     pass
 
-class NoRedirect(urllib.request.HTTPRedirectHandler):
-    def redirect_request(self, *_args, **_kwargs):
-        return None
+
+def _attribute(name):
+    enum = getattr(QNetworkRequest, 'Attribute', QNetworkRequest)
+    return getattr(enum, name)
+
+
+def _error_code(name):
+    enum = getattr(QgsBlockingNetworkRequest, 'ErrorCode', QgsBlockingNetworkRequest)
+    return getattr(enum, name)
 
 
 def fetch_tile(z, x, y):
-    request = urllib.request.Request(TILES.format(z=z, x=x, y=y), headers={'User-Agent':'Collar for QGIS/0.3.2'})
-    try:
-        with urllib.request.build_opener(NoRedirect()).open(request, timeout=4) as response:
-            if response.status == 204:
-                raise MissingTile()
-            if response.headers.get_content_type() not in ('image/jpeg', 'image/png'):
-                raise ValueError('Unexpected imagery response')
-            data = response.read(MAX_IMAGE + 1)
-            if len(data) > MAX_IMAGE:
-                raise ValueError('Imagery response limit exceeded')
-            return data
-    except urllib.error.HTTPError as error:
-        if error.code == 404:
-            raise MissingTile() from None
-        raise
+    request = QNetworkRequest(QUrl(TILES.format(z=z, x=x, y=y)))
+    request.setRawHeader(b'User-Agent', b'Collar for QGIS/0.4.2')
+    request.setTransferTimeout(4_000)
+    network = QgsBlockingNetworkRequest()
+    outcome = network.get(request, True)
+    reply = network.reply()
+    status = reply.attribute(_attribute('HttpStatusCodeAttribute'))
+    status = int(status) if status is not None else None
+    if status in (204, 404):
+        raise MissingTile()
+    if outcome != _error_code('NoError') or status != 200:
+        raise ValueError('Imagery request failed')
+    content_type = bytes(reply.rawHeader(b'Content-Type')).split(b';', 1)[0].lower()
+    if content_type not in (b'image/jpeg', b'image/png'):
+        raise ValueError('Unexpected imagery response')
+    data = bytes(reply.content())
+    if len(data) > MAX_IMAGE:
+        raise ValueError('Imagery response limit exceeded')
+    return data
 
 
 def decode_tile(data):
@@ -66,7 +79,9 @@ def crop_parent(data, z, x, y, level):
     image = decode_tile(data)
     if z != level:
         factor = 2 ** (z - level)
-        source = QRectF((x % factor) * 256 / factor, (y % factor) * 256 / factor, 256 / factor, 256 / factor)
+        source = QRectF(
+            (x % factor) * 256 / factor, (y % factor) * 256 / factor, 256 / factor, 256 / factor
+        )
         result = QImage(256, 256, QImage.Format.Format_ARGB32)
         result.fill(0)
         painter = QPainter(result)
@@ -92,13 +107,13 @@ class TileCache:
         self.stopped = threading.Event()
 
     def tile(self, z, x, y):
-        if not (0 <= z <= MAX_ZOOM and 0 <= x < 2 ** z and 0 <= y < 2 ** z):
+        if not (0 <= z <= MAX_ZOOM and 0 <= x < 2**z and 0 <= y < 2**z):
             raise ValueError('Invalid tile coordinates')
         deadline = time.monotonic() + 20
         for level in range(z, -1, -1):
             if self.stopped.is_set() or time.monotonic() >= deadline:
                 raise TimeoutError('Imagery request stopped')
-            key = (level, x >> (z-level), y >> (z-level))
+            key = (level, x >> (z - level), y >> (z - level))
             with self.lock:
                 data = self.cache.get(key)
                 if data is not None:
@@ -205,7 +220,12 @@ class ImageryService:
     def __init__(self, fetch=fetch_tile):
         self.cache = TileCache(fetch)
         self.server = LimitedServer(self.cache)
-        self.thread = threading.Thread(target=self.server.serve_forever, kwargs={'poll_interval':0.05}, name='Collar public imagery', daemon=True)
+        self.thread = threading.Thread(
+            target=self.server.serve_forever,
+            kwargs={'poll_interval': 0.05},
+            name='Collar public imagery',
+            daemon=True,
+        )
         self.thread.start()
 
     @property

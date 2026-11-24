@@ -1,4 +1,5 @@
 """Existing Collar multipart upload contract; no new file storage service."""
+
 from dataclasses import dataclass
 from pathlib import Path
 

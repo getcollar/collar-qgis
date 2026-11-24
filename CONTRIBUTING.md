@@ -22,7 +22,12 @@ Pure Python unit tests (no QGIS runtime required):
 ```sh
 python3 -m unittest discover -s tests -p 'test_*.py'
 python3 -m compileall -q collar_qgis
+ruff check .
+ruff format --check .
 ```
+
+For a small, fictional manual-test layer, load
+`tests/fixtures/outback_minerals_minimal.geojson` into a scratch QGIS project.
 
 Headless smoke checks that need the QGIS Python environment:
 

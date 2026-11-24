@@ -8,7 +8,7 @@ reviewed spatial edits and publishing for exploration and drilling teams.
 | --- | --- |
 | **QGIS** | 3.40 – 4.x (Windows, macOS, Linux) |
 | **Licence** | [GPL-2.0-or-later](LICENSE) |
-| **Status** | Beta (`0.4.1`) |
+| **Status** | Beta (`0.4.2`) |
 | **Homepage / usage** | https://getcollar.io/support/maps/collar-for-qgis |
 | **Product page** | https://getcollar.io/integrations/qgis |
 | **Issues** | https://github.com/getcollar/collar-qgis/issues |
@@ -28,7 +28,7 @@ No pip packages or separate runtime dependencies are required beyond QGIS itself
 
 ```sh
 python3 scripts/package.py
-# → dist/collar_qgis-0.4.1.zip
+# → dist/collar_qgis-0.4.2.zip
 ```
 
 Then install that ZIP in QGIS as above. Use only builds you trust.
@@ -37,7 +37,7 @@ When the plugin is accepted on [plugins.qgis.org](https://plugins.qgis.org/), in
 
 ## Workflow
 
-1. Open the dock from **Plugins → Collar → Collar for QGIS**. Select **Connect to Collar**.
+1. Open the dock from **Vector → Collar → Collar for QGIS**. Select **Connect to Collar**.
 2. Sign in in your normal browser (including configured Microsoft organisation SSO).
    Confirm the connection. Unlock the QGIS authentication database when prompted.
 3. Select an organisation and project. Check layers and select **Load layers**.
@@ -102,6 +102,8 @@ Sync is bounded (1,000 vertices per feature, 5,000 vertices / 50 changes per req
 ```sh
 python3 -m unittest discover -s tests -p 'test_*.py'
 python3 -m compileall -q collar_qgis
+ruff check .
+ruff format --check .
 python3 scripts/package.py
 python3 scripts/validate_package.py
 ```
@@ -121,6 +123,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/PUBLISHING.md](docs/PUBLISHING.
 collar_qgis/     # Installable plugin package (metadata, LICENSE, README, Python modules)
 scripts/         # ZIP packaging and repository validation
 tests/           # Pure Python tests + QGIS smoke harness
+tests/fixtures/  # Small fictional GeoJSON data for contributor checks
 docs/            # Publishing checklist for maintainers
 ```
 

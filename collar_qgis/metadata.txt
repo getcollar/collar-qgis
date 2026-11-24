@@ -2,7 +2,7 @@
 name=Collar for QGIS
 qgisMinimumVersion=3.40
 qgisMaximumVersion=4.99
-version=0.4.1
+version=0.4.2
 experimental=True
 deprecated=False
 author=Collar
@@ -24,6 +24,7 @@ tags=collar,drilling,exploration,synchronisation,spatial,gis,tracks
 hasProcessingProvider=False
 server=False
 changelog=
+  0.4.2 - Beta release preparation: QGIS proxy-aware networking, release checks, and contributor test data.
   0.4.1 - Rename standalone polygons to Work areas (work_area).
   0.4.0 - Two-way managed Tracks sync for authorised editors; published tracks remain readable for viewers.
   0.3.2 - Closer-zoom Esri imagery fallback that matches Collar's missing-tile behaviour.

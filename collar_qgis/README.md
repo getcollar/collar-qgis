@@ -6,7 +6,7 @@ Native QGIS plugin for Collar drilling and exploration projects.
 
 1. Use QGIS 3.40 or later (Windows, macOS or Linux).
 2. Install from the [QGIS Plugin Repository](https://plugins.qgis.org/) when listed, or via **Plugins → Manage and Install Plugins → Install from ZIP** using a trusted release build.
-3. Enable **Collar for QGIS**, then open **Plugins → Collar → Collar for QGIS**.
+3. Enable **Collar for QGIS**, then open **Vector → Collar → Collar for QGIS**.
 
 No pip packages are required. An active Collar organisation account is required.
 
