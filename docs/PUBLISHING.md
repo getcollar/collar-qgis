@@ -14,7 +14,7 @@ https://plugins.qgis.org/docs/approval.
 - [x] PNG icon referenced by `icon=icon.png`
 - [x] `changelog` field populated
 - [x] Account requirement and “no pip deps” stated in `about`
-- [x] `experimental=True` (QGIS Plugin Manager flag) while product status remains beta; clear only for a deliberate stable release
+- [x] `experimental=False` so QGIS does not title the stable Beta release **Experimental**
 - [x] Package folder name `collar_qgis` (ASCII snake_case, PEP 8)
 
 ## Package and validate
@@ -48,7 +48,7 @@ Do not upload until these pass:
 ## Upload
 
 1. Obtain an [OSGeo ID](https://www.osgeo.org/community/getting-started-osgeo/osgeo-userid/).
-2. Tag the release (`v0.4.3`) and attach `dist/collar_qgis-0.4.3.zip` to the GitHub Release.
+2. Tag the release (`v0.4.4`) and attach `dist/collar_qgis-0.4.4.zip` to the GitHub Release.
 3. Sign in at https://plugins.qgis.org/ and upload the same ZIP.
 4. Wait for staff approval. New plugins are reviewed before they appear publicly.
 5. After approval, update Collar marketing/support copy so it no longer says the
@@ -59,7 +59,7 @@ Do not upload until these pass:
 - Bump `version` (must be unique per upload)
 - Refresh `changelog` in `metadata.txt` and `CHANGELOG.md`
 - Re-run `scripts/validate_package.py` so homepage / repository / tracker still resolve
-- Keep `experimental=True` (QGIS flag) until the team marks a stable release; product copy should say Beta, not Experimental
+- Keep product copy labelled Beta. Enable QGIS `experimental` only for a deliberately experimental build.
 
 ## Support copy
 

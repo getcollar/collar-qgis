@@ -39,7 +39,7 @@ def _error_code(name):
 
 def fetch_tile(z, x, y):
     request = QNetworkRequest(QUrl(TILES.format(z=z, x=x, y=y)))
-    request.setRawHeader(b'User-Agent', b'Collar for QGIS/0.4.3')
+    request.setRawHeader(b'User-Agent', b'Collar for QGIS/0.4.4')
     request.setTransferTimeout(4_000)
     network = QgsBlockingNetworkRequest()
     outcome = network.get(request, True)

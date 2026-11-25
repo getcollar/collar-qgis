@@ -50,7 +50,7 @@ def _url_reachable(url: str) -> tuple[bool, str]:
                 '-w',
                 '%{http_code}',
                 '-A',
-                'Collar-QGIS-validate/0.4.3',
+                'Collar-QGIS-validate/0.4.4',
                 '--max-time',
                 '20',
                 url,
@@ -67,7 +67,7 @@ def _url_reachable(url: str) -> tuple[bool, str]:
             f'curl exit {result.returncode} HTTP {code or "n/a"} {(result.stderr or "").strip()}',
         )
 
-    headers = {'User-Agent': 'Collar-QGIS-validate/0.4.3'}
+    headers = {'User-Agent': 'Collar-QGIS-validate/0.4.4'}
     request = urllib.request.Request(url, method='GET', headers=headers)
     try:
         with urllib.request.urlopen(request, timeout=20) as response:
@@ -134,6 +134,8 @@ def validate_zip(path: Path) -> None:
         missing = [key for key in REQUIRED_METADATA if not metadata.get(key, '').strip()]
         if missing:
             fail(f'Missing required metadata fields: {", ".join(missing)}')
+        if metadata.get('experimental', '').strip().lower() != 'false':
+            fail('Stable Beta releases must set metadata experimental=False')
         if '/' in metadata['author']:
             fail('author must not contain slashes')
 

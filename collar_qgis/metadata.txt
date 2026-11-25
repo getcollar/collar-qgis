@@ -2,8 +2,8 @@
 name=Collar for QGIS
 qgisMinimumVersion=3.40
 qgisMaximumVersion=4.99
-version=0.4.3
-experimental=True
+version=0.4.4
+experimental=False
 deprecated=False
 author=Collar
 email=support@getcollar.io
@@ -24,6 +24,7 @@ tags=collar,drilling,exploration,synchronisation,spatial,gis,tracks
 hasProcessingProvider=False
 server=False
 changelog=
+  0.4.4 - Remove the QGIS Experimental label while retaining Beta product status.
   0.4.3 - Use QGIS scoped enums required by QGIS 4 / Qt 6 plugin checks.
   0.4.2 - Beta release preparation: QGIS proxy-aware networking, release checks, and contributor test data.
   0.4.1 - Rename standalone polygons to Work areas (work_area).

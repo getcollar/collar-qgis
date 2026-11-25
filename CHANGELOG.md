@@ -3,6 +3,11 @@
 All notable changes to Collar for QGIS are recorded here. Version numbers match
 `collar_qgis/metadata.txt`.
 
+## 0.4.4
+
+- Set the QGIS Plugin Manager `experimental` flag to `False` so this stable
+  Beta release is no longer titled **Experimental** by QGIS.
+
 ## 0.4.3
 
 - Use the scoped `QgsVectorFileWriter.WriterError` and
