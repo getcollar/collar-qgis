@@ -48,7 +48,7 @@ Do not upload until these pass:
 ## Upload
 
 1. Obtain an [OSGeo ID](https://www.osgeo.org/community/getting-started-osgeo/osgeo-userid/).
-2. Tag the release (`v0.4.2`) and attach `dist/collar_qgis-0.4.2.zip` to the GitHub Release.
+2. Tag the release (`v0.4.3`) and attach `dist/collar_qgis-0.4.3.zip` to the GitHub Release.
 3. Sign in at https://plugins.qgis.org/ and upload the same ZIP.
 4. Wait for staff approval. New plugins are reviewed before they appear publicly.
 5. After approval, update Collar marketing/support copy so it no longer says the

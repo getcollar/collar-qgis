@@ -8,7 +8,7 @@ reviewed spatial edits and publishing for exploration and drilling teams.
 | --- | --- |
 | **QGIS** | 3.40 – 4.x (Windows, macOS, Linux) |
 | **Licence** | [GPL-2.0-or-later](LICENSE) |
-| **Status** | Beta (`0.4.2`) |
+| **Status** | Beta (`0.4.3`) |
 | **Homepage / usage** | https://getcollar.io/support/maps/collar-for-qgis |
 | **Product page** | https://getcollar.io/integrations/qgis |
 | **Issues** | https://github.com/getcollar/collar-qgis/issues |
@@ -28,7 +28,7 @@ No pip packages or separate runtime dependencies are required beyond QGIS itself
 
 ```sh
 python3 scripts/package.py
-# → dist/collar_qgis-0.4.2.zip
+# → dist/collar_qgis-0.4.3.zip
 ```
 
 Then install that ZIP in QGIS as above. Use only builds you trust.

@@ -3,13 +3,18 @@
 All notable changes to Collar for QGIS are recorded here. Version numbers match
 `collar_qgis/metadata.txt`.
 
+## 0.4.3
+
+- Use the scoped `QgsVectorFileWriter.WriterError` and
+  `QgsVertexMarker.IconType` enums required by QGIS 4 / Qt 6 plugin checks.
+
 ## 0.4.2
 
 - Route API and optional imagery requests through QGIS networking so system and
   QGIS proxy settings are respected.
 - Place the primary plugin action in the QGIS Vector menu.
 - Add automated style checks and a fictional minimal GeoJSON contributor fixture.
-- Record completed Windows and macOS validation for the Beta release.
+- Record completed Windows, macOS and Linux validation for the Beta release.
 
 ## 0.4.1
 

@@ -10,7 +10,7 @@ from .uploads import FilePart
 
 ORIGIN = 'https://app.getcollar.io'
 MAX_RESPONSE = 32 * 1024 * 1024
-USER_AGENT = b'Collar for QGIS/0.4.2'
+USER_AGENT = b'Collar for QGIS/0.4.3'
 
 
 def _attribute(name):

@@ -50,7 +50,7 @@ def _url_reachable(url: str) -> tuple[bool, str]:
                 '-w',
                 '%{http_code}',
                 '-A',
-                'Collar-QGIS-validate/0.4.2',
+                'Collar-QGIS-validate/0.4.3',
                 '--max-time',
                 '20',
                 url,
@@ -67,7 +67,7 @@ def _url_reachable(url: str) -> tuple[bool, str]:
             f'curl exit {result.returncode} HTTP {code or "n/a"} {(result.stderr or "").strip()}',
         )
 
-    headers = {'User-Agent': 'Collar-QGIS-validate/0.4.2'}
+    headers = {'User-Agent': 'Collar-QGIS-validate/0.4.3'}
     request = urllib.request.Request(url, method='GET', headers=headers)
     try:
         with urllib.request.urlopen(request, timeout=20) as response:

@@ -386,7 +386,7 @@ def create_layer(
     result = QgsVectorFileWriter.writeAsVectorFormatV3(
         layer, str(path), QgsProject.instance().transformContext(), options
     )
-    if result[0] != QgsVectorFileWriter.NoError:
+    if result[0] != QgsVectorFileWriter.WriterError.NoError:
         raise ValueError('Could not create a persistent QGIS working copy')
     os.chmod(path, 0o600)
     layer = QgsVectorLayer(str(path) + '|layername=features', name, 'ogr')
